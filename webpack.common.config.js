@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
 	entry: {
@@ -26,17 +27,52 @@ module.exports = {
 			},
 			{
 				test: /\.css$/,
-				use: [
-					{ loader: 'style-loader' },
-					{
-						loader: 'css-loader?url=false',
-						options: {
-							module: true,
-							localIdentName: '[name]__[local]--[hash:base64:5]',
+				use: ExtractTextPlugin.extract({
+					fallback: 'style-loader',
+					use: [
+						{
+							loader: 'css-loader',
+							query: {
+								modules: true,
+								localIdentName: '[name]__[local]___[hash:base64:5]',
+							},
 						},
-					},
-				],
+						'postcss-loader',
+					],
+				}),
+				// use: [
+				// 	{ loader: 'style-loader' },
+				// 	{
+				// 		loader: 'css-loader?url=false',
+				// 		options: {
+				// 			module: true,
+				// 			localIdentName: '[name]__[local]--[hash:base64:5]',
+				// 		},
+				// 	},
+				// ],
 				exclude: ['node_modules'],
+			},
+			{
+				test: /\.scss$/,
+				exclude: /node_modules/,
+				use: ExtractTextPlugin.extract({
+					fallback: 'style-loader',
+
+					// Could also be write as follow:
+					// use: 'css-loader?modules&importLoader=2&sourceMap&localIdentName=[name]__[local]___[hash:base64:5]!sass-loader'
+					use: [
+						{
+							loader: 'css-loader',
+							query: {
+								modules: true,
+								sourceMap: true,
+								importLoaders: 2,
+								localIdentName: '[name]__[local]___[hash:base64:5]',
+							},
+						},
+						'sass-loader',
+					],
+				}),
 			},
 			{
 				test: /\.(glsl|frag|vert)$/,
@@ -48,9 +84,10 @@ module.exports = {
 				loader: 'glslify-loader',
 				exclude: /node_modules/,
 			},
-		]
+		],
 	},
 	plugins: [
+		new ExtractTextPlugin("style.css"),
 		new HtmlWebpackPlugin({
 			template: './src/template.html',
 			files: {
